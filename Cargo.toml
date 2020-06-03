@@ -14,7 +14,8 @@ categories = ["mathematics", "graphics"]
 
 [dependencies]
 num-traits = "0.2.10"
-mint = { version = "0.5.4", optional = true }
+#mint = { version = "0.5.5", optional = true }
+mint = { git = "https://github.com/nazar-pc/mint", branch = "derive-default", optional = true }
 
 [dev-dependencies]
 ggez = "0.5.1"

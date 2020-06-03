@@ -6,9 +6,14 @@ use ggez::{Context, ContextBuilder, GameResult};
 use ggez::conf::{WindowMode, WindowSetup};
 use ggez::event::EventHandler;
 use ggez::graphics::*;
-use ggez::mint::Point2;
 
 use keyframe::{keyframes, AnimationSequence, functions::*};
+use keyframe::mint::Point2;
+
+// TODO: Hack until `mint` fork is not the same library as `ggez` uses
+fn to_ggez_point2<T>(point: Point2<T>) -> ggez::mint::Point2<T> {
+	Into::<[T; 2]>::into(point).into()
+}
 
 fn main() -> GameResult {
 	let (mut ctx, mut event_loop) = ContextBuilder::new("visualizer", "Hannes Mann")
@@ -46,15 +51,15 @@ fn match_sequence(example: &VisualizerExample) -> AnimationSequence<Point2<f32>>
 	match example {
 		VisualizerExample::LinearTwoPoint => keyframes![([0.0, 0.0].into(), 0.0, Linear), ([1.0, 1.0].into(), 1.0, Linear)],
 		VisualizerExample::LinearFourPoint => keyframes![
-			([0.0, 0.0].into(), 0.0, Linear), 
-			([0.2, 0.4].into(), 0.3, Linear), 
-			([0.8, 0.4].into(), 0.8, Linear), 
+			([0.0, 0.0].into(), 0.0, Linear),
+			([0.2, 0.4].into(), 0.3, Linear),
+			([0.8, 0.4].into(), 0.8, Linear),
 			([1.0, 1.0].into(), 1.0, Linear)
 		],
 		VisualizerExample::EaseInOutFourPoint => keyframes![
-			([0.0, 0.0].into(), 0.0), 
-			([0.2, 0.4].into(), 0.3), 
-			([0.8, 0.4].into(), 0.8), 
+			([0.0, 0.0].into(), 0.0),
+			([0.2, 0.4].into(), 0.3),
+			([0.8, 0.4].into(), 0.8),
 			([1.0, 1.0].into(), 1.0)
 		],
 		VisualizerExample::LinearCircle30Point => {
@@ -73,9 +78,9 @@ fn match_sequence(example: &VisualizerExample) -> AnimationSequence<Point2<f32>>
 			let bezier = BezierCurve::from([0.6, 0.04].into(), [0.98, 0.335].into());
 
 			keyframes![
-				([0.0, 0.0].into(), 0.0, bezier), 
-				([0.2, 0.4].into(), 0.3, bezier), 
-				([0.8, 0.4].into(), 0.8, bezier), 
+				([0.0, 0.0].into(), 0.0, bezier),
+				([0.2, 0.4].into(), 0.3, bezier),
+				([0.8, 0.4].into(), 0.8, bezier),
 				([1.0, 1.0].into(), 1.0, bezier)
 			]
 		},
@@ -93,9 +98,9 @@ fn match_sequence(example: &VisualizerExample) -> AnimationSequence<Point2<f32>>
 			].to_easing_function();
 
 			keyframes![
-				([0.0, 0.0].into(), 0.0, function), 
-				([0.2, 0.4].into(), 0.3, function), 
-				([0.8, 0.4].into(), 0.8, function), 
+				([0.0, 0.0].into(), 0.0, function),
+				([0.2, 0.4].into(), 0.3, function),
+				([0.8, 0.4].into(), 0.8, function),
 				([1.0, 1.0].into(), 1.0, function)
 			]
 		},
@@ -116,7 +121,7 @@ impl EventHandler for Visualizer {
 		let now = std::time::Instant::now();
 		self.keyframes.advance_and_maybe_reverse(ggez::timer::delta(ctx).as_secs_f64() * 0.5);
 		self.time_in_crate += (std::time::Instant::now() - now).as_secs_f64();
-		
+
 		Ok(())
 	}
 
@@ -165,7 +170,7 @@ impl EventHandler for Visualizer {
 		let point: Point2<f32> = [area[0] + self.keyframes.now().x * area[2], area[1] + (1.0 - self.keyframes.now().y) * area[3]].into();
 		self.time_in_crate += (std::time::Instant::now() - now).as_secs_f64();
 
-		let circle = Mesh::new_circle(ctx, DrawMode::Fill(FillOptions::DEFAULT), point, 4.0, 2.0, Color::new(0.83, 0.17, 0.12, 1.0))?;
+		let circle = Mesh::new_circle(ctx, DrawMode::Fill(FillOptions::DEFAULT), to_ggez_point2(point), 4.0, 2.0, Color::new(0.83, 0.17, 0.12, 1.0))?;
 		draw(ctx, &circle, DrawParam::default())?;
 
 		for k in &self.keyframes {
@@ -175,14 +180,14 @@ impl EventHandler for Visualizer {
 				scale: Some(Scale::uniform(14.0)),
 				..Default::default()
 			});
-			
+
 			let p: Point2<f32> = [
-				(area[0] + k.value().x * area[2] - text.dimensions(ctx).0 as f32 / 2.0).round(), 
+				(area[0] + k.value().x * area[2] - text.dimensions(ctx).0 as f32 / 2.0).round(),
 				(area[1] + (1.0 - k.value().y) * area[3] - 20.0).round()
 			].into();
 
 			draw(ctx, &text, DrawParam::default()
-				.dest(p)
+				.dest(to_ggez_point2(p))
 				.color(Color::new(0.83, 0.17, 0.12, 1.0))
 			)?;
 		}
